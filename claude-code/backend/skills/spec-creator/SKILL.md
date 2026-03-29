@@ -48,6 +48,7 @@ When producing the **development plan**, the structure must be task-oriented and
 2. Under each task include:
    - `**Files:**` list with `Create/Modify/Read/Delete` targets
    - Task-local checkbox list with `[ ]` items describing concrete implementation steps
+   - Last checkbox in every task must be `- [ ] Mark completed`
 3. Place checkboxes only in task sections:
    - Every actionable implementation step must be a checkbox inside its task
    - Do not place `[ ]` checkboxes in context, acceptance criteria, risks, or standalone QA sections
