@@ -14,9 +14,17 @@ This section contains Vue-specific conventions only.
 - Do not place Tailwind or generic CSS ownership rules here.
 - Reference `plugins/core/conduct/ownership-map.md` when in doubt.
 
-## Component structure
+## Component design
 
+- Keep components focused on rendering and interaction wiring. Business logic belongs in composables or services.
+- Keep component APIs simple and avoid over-generalization.
+- Favor explicit props/events contracts over implicit coupling.
 - Vue components must have a **single root element**. Multiple root elements cause issues with attribute inheritance and transitions.
+
+## Composables and state
+
+- Extract reusable behavior into composables when logic repeats across components.
+- Keep state ownership clear: prefer local component state first; use shared state only when multiple unrelated components need it.
 
 ## Safe rendering
 

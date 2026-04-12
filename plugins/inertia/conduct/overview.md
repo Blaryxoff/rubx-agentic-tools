@@ -31,6 +31,11 @@ Props passed from a controller to an Inertia page are a **public API**. Changing
 - Use `<Link>` or `router.visit()` for all internal navigation.
 - Never use `<a href>` for internal routes — it causes a full page reload and breaks SPA behavior.
 
+## Mutations and redirects
+
+- Preserve predictable request/response flow: mutations should follow the standard Inertia form submission → redirect → page reload cycle.
+- Use Inertia form helpers (`useForm`, `router.post/put/delete`) instead of ad-hoc fetch/axios for mutations that fit the convention.
+
 ## Loading, empty, and error states
 
 - Every page or component that displays data must handle three states:

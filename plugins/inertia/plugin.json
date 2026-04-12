@@ -6,7 +6,6 @@
   "defaultEnabled": false,
   "dependencies": ["devkit-core"],
   "paths": {
-    "skills": "./skills",
     "conduct": "./conduct"
   }
 }
