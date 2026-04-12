@@ -75,6 +75,7 @@ interface UserRepository
       broken invariants (e.g. an Order with OrderLines — you never save a line without its parent order). If a single
       entity can enforce its own rules and is saved independently, an aggregate is not needed.
 - Contracts should only be used inside Application Services, never in entities or value objects.
+- **Services/Actions constraint**: one public method = one business scenario. Services must be small, predictable, and testable. Avoid god-services that accumulate unrelated methods. Extract a new service/action when a method does not belong to the existing scenario.
 - Make services slim so put as much logic as possible into value objects, entities and aggregates
 - Eloquent models should stay thin: data shape, relationships, simple accessors/mutators, and query scopes are
   acceptable; business workflows belong in services/actions/domain.
