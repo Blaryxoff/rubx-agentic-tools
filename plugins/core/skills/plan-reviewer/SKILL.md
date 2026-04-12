@@ -208,17 +208,24 @@ Flag stack-specific contradictions as `STACK MISMATCH` and cite the supporting r
 
 ## Step 3.6 — Enforce active plugin conduct rules
 
-If the project uses the devkit toolkit, read `.devkit/toolkit.json` to identify enabled plugins. Locate the toolkit
-directory (look for `plugins/*/plugin.json` relative to the toolkit submodule root).
+Read `.devkit/toolkit.json` to identify enabled plugins. For each active plugin that has a `conduct/` directory, read all
+conduct docs in that directory **except** the files in the skip list below.
 
-For each active plugin that has a `conduct/` directory:
+### Conduct files to skip
 
-1. Read all conduct docs in `plugins/<plugin>/conduct/`.
+`logging.md`, `observability.md`, `git.md`, `cmd.md`, `makefile.md`, `documentation.md`, `php.md`,
+`fast_code_review_checklist.md`, `README.md`, `CLAUDE.md`.
+
+Every other `.md` file in a plugin's `conduct/` directory is plan-relevant and must be read.
+
+### How to verify
+
+1. Read the plan-relevant conduct files from each active plugin's `conduct/` directory.
 2. Verify the plan does not violate any architecture rule, anti-pattern, or convention defined in those docs.
 3. For dev plans: verify that task steps follow the patterns prescribed in conduct docs and avoid the red-flag
-   anti-patterns. Flag violations as `STACK MISMATCH` with evidence citing the specific conduct doc and rule.
-
-If the project does not use the devkit toolkit (no `.devkit/toolkit.json`), skip this step.
+   anti-patterns. Flag violations as `STACK MISMATCH` with evidence citing the specific conduct doc filename and rule.
+4. If a conduct doc rule conflicts with a project-level rule file (`.cursor/rules/`, `CLAUDE.md`, `AGENTS.md`), prefer
+   the project-level rule and note the exception.
 
 ---
 

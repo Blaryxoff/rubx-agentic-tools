@@ -145,17 +145,23 @@ cause extra agent loop iterations.
 
 ## Stack-specific rules from active plugins
 
-If the project uses the devkit toolkit, read `.devkit/toolkit.json` to identify enabled plugins. For each active plugin,
-read its conduct docs (`plugins/<plugin>/conduct/`). Apply their architecture rules and anti-patterns when writing task
-steps.
+Read `.devkit/toolkit.json` to identify enabled plugins. For each active plugin that has a `conduct/` directory, read all
+conduct docs in that directory **except** the files in the skip list below.
 
-Specifically:
+### Conduct files to skip
+
+`logging.md`, `observability.md`, `git.md`, `cmd.md`, `makefile.md`, `documentation.md`, `php.md`,
+`fast_code_review_checklist.md`, `README.md`, `CLAUDE.md`.
+
+Every other `.md` file in a plugin's `conduct/` directory is plan-relevant and must be read.
+
+### How to apply
 
 - Task steps must follow the architecture patterns defined in active plugins' conduct docs.
 - Red-flag patterns listed in conduct docs must be avoided in generated task steps.
 - If a conduct doc defines a correct task step shape (e.g. Action extraction pattern), use that shape.
-
-If the project does not use the devkit toolkit (no `.devkit/toolkit.json`), skip this section.
+- If a conduct doc rule conflicts with a project-level rule file (`.cursor/rules/`, `CLAUDE.md`, `AGENTS.md`), prefer
+  the project-level rule and note the exception.
 
 ---
 
@@ -167,44 +173,3 @@ If the project does not use the devkit toolkit (no `.devkit/toolkit.json`), skip
 - Ensure stack implications (types, conventions, BEM/Tailwind/etc.) are covered for all affected layers.
 - Optimize for first-pass acceptance by ralphex: task-based format, explicit files, checkbox traceability.
 
----
-
-## Thin controller / thin model rule (Laravel projects)
-
-When writing task steps for a Laravel project, **never prescribe business logic inside a controller method body**. This
-is a hard rule enforced by project conventions.
-
-**A controller method may only:** resolve the primary resource (`findOrFail`), delegate to Action(s), and return an HTTP
-response.
-
-When a task introduces a new controller endpoint, the task steps must follow this split:
-
-1. Create an Action class that owns all business logic — state/status guards, ownership checks, authorship checks,
-   business queries, calculations, cross-model updates.
-2. The controller method calls the action and maps its typed domain exception to an HTTP response.
-
-**Red-flag patterns — rewrite when you see these in your own task steps:**
-
-- "In the controller, check if `$model->status !== X`, return 422" → move to Action, throw typed exception
-- "In the controller, load `RelatedModel::findOrFail($id)`, verify `->foreign_id === $parent->id`" → move to Action
-- "In the controller, if `$user->id !== $comment->author_id && !Gate::allows('admin')`" → move to Action
-- Steps that are identical or near-identical across two controller methods → always extract to a shared Action
-- "In the controller, loop through `$answers`, check `points_received > $max`" → move to Action or FormRequest
-  `withValidator()`
-
-**Correct task step shape for a new endpoint:**
-
-```
-### Task N: Add XxxEndpoint
-
-**Files:** Create `app/Actions/Foo/XxxAction.php`; Modify `app/Http/Controllers/Admin/FooController.php`; Modify `routes/admin.php`
-
-- [ ] Create `XxxAction`: receives typed parameters; enforces [state guard / ownership / authorship]; throws `XxxBlockedException` on failure
-- [ ] Add `xxx(AdminRequest $request, ...)` to controller: resolve resource with `withTrashed()->findOrFail()`, call `XxxAction::run(...)`, catch `XxxBlockedException` and return 422 JSON
-- [ ] Register route in `routes/admin.php` before `Route::resources(...)`
-- [ ] Mark completed
-```
-
-**Thin model rule:** Eloquent models may contain `$fillable`/`$casts`, relationships, query scopes, and simple
-accessors. Never add business workflows (multi-step branching, status transitions, notification dispatch, cross-model
-orchestration) to a model method — those belong in Actions or Services.

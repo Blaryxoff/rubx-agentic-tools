@@ -1,11 +1,11 @@
 ---
 name: devkit-verify
-description: run the verification loop (build, lint, typecheck, test, security) after implementation changes and report results
+description: run the verification loop (lint, typecheck, test, security) after implementation changes and report results
 ---
 
 # Verification Loop Runner
 
-You are acting as a **build engineer**. Your job is to run the project's verification loop after implementation changes
+You are acting as a **quality engineer**. Your job is to run the project's verification loop after implementation changes
 and report the results clearly.
 
 ## Stack-specific commands
@@ -19,20 +19,16 @@ generic defaults.
 If neither source provides commands, fall back to detecting the stack from project files (`package.json`, `composer.json`,
 `Cargo.toml`, `go.mod`, etc.) and use conventional commands.
 
+## Build assumption
+
+Do not run a separate build command. Assume the dev server is already running and will surface compile/bundle errors
+automatically. If the dev server reports errors, fix them.
+
 ## The loop
 
 Run these steps in order. Stop and report on first failure unless the user asks for a full report.
 
-### 1. Build
-
-Run the project's build/compile command. Examples by stack:
-
-- Laravel: `php artisan route:list --compact` (smoke-check routes parse)
-- Node/Vue/Nuxt: `pnpm run build` or `pnpm run typecheck`
-- Rust: `cargo check`
-- Go: `go build ./...`
-
-### 2. Lint
+### 1. Lint
 
 Run the linter on changed files or the full project:
 
@@ -41,7 +37,7 @@ Run the linter on changed files or the full project:
 - Rust: `cargo clippy`
 - Go: `golangci-lint run`
 
-### 3. Type check
+### 2. Type check
 
 Run static type analysis when the stack supports it:
 
@@ -51,18 +47,19 @@ Run static type analysis when the stack supports it:
 
 Skip this step for dynamically typed stacks without a configured type checker.
 
-### 4. Test
+### 3. Test
 
-Run the test suite:
+Run the existing test suite only if the user explicitly asked for verification that includes testing.
 
 - Laravel: `php artisan test`
 - Node: `pnpm run test`
 - Rust: `cargo test`
 - Go: `go test ./...`
 
-If the project has no tests or the user has not requested test creation, note this and continue.
+If the user did not ask for tests, skip this step and mark it as `⏭️ skipped — not requested`.
+Do not create new test files or write test code as part of verification.
 
-### 5. Security spot-check
+### 4. Security spot-check
 
 Review the changes (not the full codebase) for obvious security issues:
 
@@ -80,10 +77,9 @@ This is a quick review, not a full audit. Report findings inline with the other 
 
 | Step       | Status | Notes                          |
 |------------|--------|--------------------------------|
-| Build      | ✅/❌  | <one-line summary or "passed"> |
 | Lint       | ✅/❌  | <one-line summary or "passed"> |
 | Type check | ✅/⏭️  | <one-line summary or "skipped — no type checker configured"> |
-| Test       | ✅/❌  | <one-line summary or "passed (N tests)"> |
+| Test       | ✅/⏭️  | <one-line summary or "skipped — not requested"> |
 | Security   | ✅/⚠️  | <one-line summary or "no issues found"> |
 ```
 
@@ -95,5 +91,5 @@ If any step failed, include the relevant error output below the table.
 - Do not run destructive commands (database wipes, force pushes, etc.).
 - If a failure is clearly pre-existing (exists on the base branch, unrelated to recent changes), mark it as
   `⚠️ pre-existing` rather than `❌`.
-- Respect the agent test restraint rule: do not create or run tests unless the user explicitly asked for verification
-  that includes testing.
+- Respect the agent test restraint rule: do not create test files or run test suites unless the user explicitly asked.
+  All other verification steps (lint, typecheck, security review) are expected and should always run.

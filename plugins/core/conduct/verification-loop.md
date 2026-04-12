@@ -6,11 +6,12 @@ Defines the standard verification cycle to run after implementation changes. Sta
 
 After completing an implementation task (or a coherent subset), run these checks in order:
 
-1. **Build** — the project must compile/bundle without errors.
-2. **Lint** — no new linter warnings or errors introduced by the change.
-3. **Type check** — static type analysis passes (when applicable to the stack).
-4. **Test** — existing tests pass; new tests pass if written.
-5. **Security** — no obvious security regressions (exposed secrets, raw SQL, missing auth).
+1. **Lint** — no new linter warnings or errors introduced by the change.
+2. **Type check** — static type analysis passes (when applicable to the stack).
+3. **Test** — existing tests pass; new tests pass if written.
+4. **Security** — no obvious security regressions (exposed secrets, raw SQL, missing auth).
+
+Do not run a separate build command. Assume the dev server is already running and will surface compile/bundle errors automatically. If the dev server reports errors, fix them.
 
 ## When to run
 
