@@ -6,6 +6,7 @@
 # Output (in PROJECT_ROOT):
 #   .codex/skills/devkit-<plugin>--<skill>/  — symlinks to resolved plugins' skill dirs
 #   AGENTS.md                              — appends/updates ## devkit-toolkit section
+#                                            (includes conduct references and hook instructions)
 #
 # Input config:
 #   .devkit/toolkit.json                     — standard devkit project config
@@ -14,11 +15,13 @@
 #   - Sources adapters/_lib/resolve.sh for plugin resolution
 #   - Skills are symlinked (not copied) to keep them in sync
 #   - AGENTS.md gets a managed section listing conduct doc paths
+#   - Plugin hooks are described in AGENTS.md as instructions (Codex lacks native hook support)
 
 set -euo pipefail
 
 ADAPTER_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$ADAPTER_DIR/../_lib/resolve.sh"
+source "$ADAPTER_DIR/../_lib/hooks.sh"
 
 RELPATH=$(toolkit_relpath)
 
@@ -77,6 +80,21 @@ while IFS= read -r name; do
 
 done <<< "$resolved_names"
 
+# --- Collect hook instructions for AGENTS.md (Codex lacks native hooks) ---
+merged_hooks=$(merge_plugin_hooks "$plugin_index" "$resolved_names")
+has_hooks=$(echo "$merged_hooks" | jq 'length > 0')
+hook_instructions=""
+
+if [ "$has_hooks" = "true" ]; then
+  hook_instructions="\n### Verification hooks\n\nThe following checks should be run at the specified lifecycle points:\n"
+  hook_instructions="${hook_instructions}$(echo "$merged_hooks" | jq -r '
+    to_entries[] |
+    "\n**\(.key):**\n" +
+    (.value[] | "- `\(.command)`" + if .matcher != "" then " (when tool matches `\(.matcher)`)" else "" end)
+  ')"
+  hook_instructions="${hook_instructions}\n"
+fi
+
 # --- Update AGENTS.md ---
 SECTION_START="<!-- devkit-toolkit:start -->"
 SECTION_END="<!-- devkit-toolkit:end -->"
@@ -85,7 +103,7 @@ new_section="${SECTION_START}
 ## devkit-toolkit
 
 Read and apply the following conduct documents for this project:
-$(echo -e "$conduct_lines")
+$(echo -e "$conduct_lines")$(echo -e "$hook_instructions")
 ${SECTION_END}"
 
 if [ -f "$agents_file" ]; then

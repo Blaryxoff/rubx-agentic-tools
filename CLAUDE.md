@@ -26,6 +26,7 @@ bin/
   devkit-resolve           CLI entry point for resolution and adapter generation
 adapters/
   _lib/resolve.sh        Core resolution algorithm (bash + jq)
+  _lib/hooks.sh          Shared hook merging + event translation (DRY adapter pattern)
   claude/generate        Claude Code adapter
   cursor/generate        Cursor IDE adapter
   codex/generate         OpenAI Codex adapter

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # devkit-toolkit: Cursor adapter
 #
-# Generates Cursor rules (.mdc) and skill symlinks from resolved plugins.
+# Generates Cursor rules (.mdc), skill symlinks, and merged hooks from resolved plugins.
 #
 # Output (in PROJECT_ROOT):
 #   .cursor/rules/devkit-<plugin>.mdc  — one rule file per resolved plugin with conduct
 #   .cursor/skills/devkit-<plugin>/    — symlinks to each resolved plugin's skill dirs
+#   .cursor/hooks/hooks.json           — merged hooks translated to Cursor event names
 #
 # Input config:
 #   .devkit/toolkit.json               — standard devkit project config
@@ -16,11 +17,15 @@
 #     instructs Cursor to read the conduct docs on demand
 #   - devkit-core.mdc is always generated with alwaysApply: true
 #   - Skills are symlinked (not copied) to keep them in sync with the toolkit
+#   - Hooks from resolved plugins are merged and translated to Cursor event names
+#     (DRY adapter pattern: plugins define hooks once in Claude Code format,
+#      each adapter translates to its target tool's event model)
 
 set -euo pipefail
 
 ADAPTER_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$ADAPTER_DIR/../_lib/resolve.sh"
+source "$ADAPTER_DIR/../_lib/hooks.sh"
 
 RELPATH=$(toolkit_relpath)
 
@@ -123,8 +128,23 @@ while IFS= read -r name; do
 
 done <<< "$resolved_names"
 
+# --- Merge and translate hooks ---
+merged_hooks=$(merge_plugin_hooks "$plugin_index" "$resolved_names")
+cursor_hooks=$(translate_hooks_to_cursor "$merged_hooks")
+has_hooks=$(echo "$cursor_hooks" | jq 'length > 0')
+
+if [ "$has_hooks" = "true" ]; then
+  hooks_dir="$PROJECT_ROOT/.cursor/hooks"
+  mkdir -p "$hooks_dir"
+  hooks_file="$hooks_dir/hooks.json"
+
+  echo "$cursor_hooks" | jq '.' > "$hooks_file"
+  hook_count=$(echo "$cursor_hooks" | jq '[.[] | length] | add // 0')
+  echo "    Created: .cursor/hooks/hooks.json ($hook_count hook(s) from resolved plugins)"
+fi
+
 echo ""
-echo "Done. Cursor will pick up rules and skills automatically."
+echo "Done. Cursor will pick up rules, skills, and hooks automatically."
 echo ""
 echo "Resolved plugins:"
 echo "$resolved_names" | while read -r name; do echo "  - $name"; done

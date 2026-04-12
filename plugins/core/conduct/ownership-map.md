@@ -12,6 +12,8 @@ To avoid duplicated or conflicting rules, each policy family has one owner plugi
   - shared process standards
   - spec/test-case workflow
   - global review/reporting conventions
+  - context management and token optimization
+  - research-first and verification loop disciplines
 - `devkit-laravel`:
   - Laravel and backend architecture conventions
   - FormRequest, Policy/Gate, Eloquent, service/action patterns

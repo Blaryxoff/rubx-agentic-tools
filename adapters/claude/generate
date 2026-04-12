@@ -5,7 +5,7 @@
 #
 # Output (in PROJECT_ROOT):
 #   .claude-plugin/marketplace.json  — filtered marketplace for resolved plugins only
-#   .claude/settings.json            — merged permissions.deny from resolved plugins
+#   .claude/settings.json            — merged permissions.deny + hooks from resolved plugins
 #
 # Input config:
 #   .devkit/toolkit.json               — standard devkit project config
@@ -14,6 +14,7 @@
 #   - Sources adapters/_lib/resolve.sh for plugin resolution
 #   - Each resolved plugin with paths.skills becomes a marketplace entry
 #   - source paths are relative from project root to the plugin directory
+#   - Hooks from resolved plugins are merged into settings.json
 #   - MCP/LSP configs from resolved plugins are noted but not merged (manual step)
 #   - permissions.deny lists are merged from all resolved plugins' settings.json
 
@@ -21,6 +22,7 @@ set -euo pipefail
 
 ADAPTER_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$ADAPTER_DIR/../_lib/resolve.sh"
+source "$ADAPTER_DIR/../_lib/hooks.sh"
 
 RELPATH=$(toolkit_relpath)
 
@@ -82,17 +84,32 @@ while IFS= read -r name; do
   fi
 done <<< "$resolved_names"
 
+# --- Merge hooks from resolved plugins ---
+merged_hooks=$(merge_plugin_hooks "$plugin_index" "$resolved_names")
+cleaned_hooks=$(clean_hooks "$merged_hooks")
+has_hooks=$(echo "$cleaned_hooks" | jq 'length > 0')
+
 if [ -f "$settings_file" ]; then
   existing=$(cat "$settings_file")
   updated=$(echo "$existing" | jq \
     --argjson deny "$deny_list" \
     '.permissions.deny = ((.permissions.deny // []) + $deny | unique)')
+  if [ "$has_hooks" = "true" ]; then
+    updated=$(echo "$updated" | jq --argjson hooks "$cleaned_hooks" '.hooks = $hooks')
+  fi
   echo "$updated" | jq '.' > "$settings_file"
-  echo "    Updated: .claude/settings.json (permissions.deny)"
+  echo "    Updated: .claude/settings.json (permissions.deny$([ "$has_hooks" = "true" ] && echo ", hooks"))"
 else
-  jq -n \
-    --argjson deny "$deny_list" \
-    '{permissions: {deny: $deny}}' > "$settings_file"
+  if [ "$has_hooks" = "true" ]; then
+    jq -n \
+      --argjson deny "$deny_list" \
+      --argjson hooks "$cleaned_hooks" \
+      '{permissions: {deny: $deny}, hooks: $hooks}' > "$settings_file"
+  else
+    jq -n \
+      --argjson deny "$deny_list" \
+      '{permissions: {deny: $deny}}' > "$settings_file"
+  fi
   echo "    Created: .claude/settings.json"
 fi
 

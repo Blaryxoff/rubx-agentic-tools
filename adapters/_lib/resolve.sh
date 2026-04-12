@@ -56,68 +56,6 @@ resolve_plugins() {
     exit 1
   fi
 
-  local enabled
-  enabled=$(jq -r '.enabled[]' "$config")
-  local plugin_index
-  plugin_index=$(_build_plugin_index)
-
-  local layer_order='{"core":0,"stack":1,"framework":2,"styling":3}'
-
-  echo "$plugin_index" | jq -r --arg enabled_raw "$enabled" --argjson layer_order "$layer_order" '
-    def resolve(name; visited; resolved):
-      if (resolved | has(name)) then [visited, resolved]
-      elif (visited | has(name)) then
-        "CYCLE:\(name)" | halt_error(1)
-      elif (has(name) | not) then
-        "MISSING:\(name)" | halt_error(1)
-      else
-        (visited + {(name): true}) as $v |
-        reduce (.[name].dependencies[]? // empty) as $dep (
-          [$v, resolved];
-          resolve($dep; .[0]; .[1])
-        ) |
-        [.[0] | del(.[name]), .[1] + {(name): true}]
-      end;
-
-    ($enabled_raw | split("\n") | map(select(. != ""))) as $enabled_list |
-
-    [keys[] | select(.[$layer_order] != null) | select(.[. as $k | $k] | .defaultEnabled == true)] as $defaults |
-
-    reduce (($defaults + $enabled_list)[] | select(. != "")) as $plugin (
-      [{}, {}];
-      resolve($plugin; .[0]; .[1])
-    ) |
-    .[1] | keys[] |
-    . as $name |
-    {name: $name, layer_idx: ($layer_order[input_line_number - 1] // 99)} |
-    .name
-  ' 2>&1
-
-  local exit_code=$?
-  if [ $exit_code -ne 0 ]; then
-    return $exit_code
-  fi
-}
-
-resolve_plugins() {
-  _check_jq
-
-  local config="$PROJECT_ROOT/.devkit/toolkit.json"
-  if [ ! -f "$config" ]; then
-    local _hint
-    _hint=$(python3 -c "import os.path; print(os.path.relpath('$TOOLKIT_ROOT', '$PROJECT_ROOT'))")
-    echo "ERROR: No .devkit/toolkit.json found at $PROJECT_ROOT" >&2
-    echo "Run:   $_hint/bin/devkit-resolve --init" >&2
-    exit 1
-  fi
-
-  local version
-  version=$(jq -r '.version' "$config")
-  if [ "$version" != "1" ]; then
-    echo "ERROR: Unsupported toolkit.json version: $version (expected 1)" >&2
-    exit 1
-  fi
-
   local plugin_index
   plugin_index=$(_build_plugin_index)
 
