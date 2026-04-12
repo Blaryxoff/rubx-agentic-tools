@@ -6,25 +6,25 @@ Restructure plugin packaging to allow per-project composition via `enabledPlugin
 
 ## Target Plugin Set
 
-- `rubx-core` (cross-stack process and shared skills)
-- `rubx-laravel` (Laravel + backend architectural guidance combined)
-- `rubx-frontend` (tool-agnostic frontend guidance + generic CSS best practices)
-- `rubx-inertia` (Inertia-specific rules)
-- `rubx-vue` (Vue-specific rules)
-- `rubx-tailwind` (Tailwind-specific rules)
-- `rubx-nuxt` (Nuxt-specific rules)
+- `devkit-core` (cross-stack process and shared skills)
+- `devkit-laravel` (Laravel + backend architectural guidance combined)
+- `devkit-frontend` (tool-agnostic frontend guidance + generic CSS best practices)
+- `devkit-inertia` (Inertia-specific rules)
+- `devkit-vue` (Vue-specific rules)
+- `devkit-tailwind` (Tailwind-specific rules)
+- `devkit-nuxt` (Nuxt-specific rules)
 
 ## Strict Ownership Contract
 
 Each rule family has one owner plugin only.
 
-- `rubx-core`: workflow/reporting/spec/test-case process
-- `rubx-laravel`: FormRequest, Policy/Gate, Eloquent, service/action boundaries
-- `rubx-frontend`: generic frontend architecture and CSS variable/reuse rules
-- `rubx-inertia`: Inertia props/forms/navigation/deferred behavior
-- `rubx-vue`: component/composable/state management patterns
-- `rubx-tailwind`: utility classes, arbitrary values, token mapping in Tailwind config
-- `rubx-nuxt`: SSR/runtime/data conventions
+- `devkit-core`: workflow/reporting/spec/test-case process
+- `devkit-laravel`: FormRequest, Policy/Gate, Eloquent, service/action boundaries
+- `devkit-frontend`: generic frontend architecture and CSS variable/reuse rules
+- `devkit-inertia`: Inertia props/forms/navigation/deferred behavior
+- `devkit-vue`: component/composable/state management patterns
+- `devkit-tailwind`: utility classes, arbitrary values, token mapping in Tailwind config
+- `devkit-nuxt`: SSR/runtime/data conventions
 
 Non-owner plugins may reference owner rules briefly, but must not duplicate full rule text.
 
@@ -64,13 +64,13 @@ Non-owner plugins may reference owner rules briefly, but must not duplicate full
 ```json
 {
   "enabledPlugins": {
-    "rubx-core@rubx": true,
-    "rubx-laravel@rubx": true,
-    "rubx-frontend@rubx": true,
-    "rubx-inertia@rubx": true,
-    "rubx-vue@rubx": true,
-    "rubx-tailwind@rubx": true,
-    "rubx-nuxt@rubx": false
+    "devkit-core@devkit": true,
+    "devkit-laravel@devkit": true,
+    "devkit-frontend@devkit": true,
+    "devkit-inertia@devkit": true,
+    "devkit-vue@devkit": true,
+    "devkit-tailwind@devkit": true,
+    "devkit-nuxt@devkit": false
   }
 }
 ```
@@ -80,13 +80,13 @@ Non-owner plugins may reference owner rules briefly, but must not duplicate full
 ```json
 {
   "enabledPlugins": {
-    "rubx-core@rubx": true,
-    "rubx-frontend@rubx": true,
-    "rubx-nuxt@rubx": true,
-    "rubx-vue@rubx": true,
-    "rubx-tailwind@rubx": true,
-    "rubx-laravel@rubx": false,
-    "rubx-inertia@rubx": false
+    "devkit-core@devkit": true,
+    "devkit-frontend@devkit": true,
+    "devkit-nuxt@devkit": true,
+    "devkit-vue@devkit": true,
+    "devkit-tailwind@devkit": true,
+    "devkit-laravel@devkit": false,
+    "devkit-inertia@devkit": false
   }
 }
 ```
