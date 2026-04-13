@@ -86,8 +86,7 @@ done <<< "$resolved_names"
 
 # --- Merge hooks from resolved plugins ---
 merged_hooks=$(merge_plugin_hooks "$plugin_index" "$resolved_names")
-cleaned_hooks=$(clean_hooks "$merged_hooks")
-has_hooks=$(echo "$cleaned_hooks" | jq 'length > 0')
+has_hooks=$(echo "$merged_hooks" | jq 'length > 0')
 
 if [ -f "$settings_file" ]; then
   existing=$(cat "$settings_file")
@@ -95,7 +94,7 @@ if [ -f "$settings_file" ]; then
     --argjson deny "$deny_list" \
     '.permissions.deny = ((.permissions.deny // []) + $deny | unique)')
   if [ "$has_hooks" = "true" ]; then
-    updated=$(echo "$updated" | jq --argjson hooks "$cleaned_hooks" '.hooks = $hooks')
+    updated=$(echo "$updated" | jq --argjson hooks "$merged_hooks" '.hooks = $hooks')
   fi
   echo "$updated" | jq '.' > "$settings_file"
   echo "    Updated: .claude/settings.json (permissions.deny$([ "$has_hooks" = "true" ] && echo ", hooks"))"
@@ -103,7 +102,7 @@ else
   if [ "$has_hooks" = "true" ]; then
     jq -n \
       --argjson deny "$deny_list" \
-      --argjson hooks "$cleaned_hooks" \
+      --argjson hooks "$merged_hooks" \
       '{permissions: {deny: $deny}, hooks: $hooks}' > "$settings_file"
   else
     jq -n \

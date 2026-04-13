@@ -8,9 +8,22 @@
 #   merge_plugin_hooks  — merge all resolved plugins' hooks into a single JSON object
 #
 # Plugin hooks format (Claude Code canonical):
-#   { "hooks": { "EventName": [{ "matcher": "...", "command": "...", "timeout_ms": N }] } }
+#   {
+#     "hooks": {
+#       "EventName": [
+#         {
+#           "matcher": "regex",
+#           "hooks": [
+#             { "type": "command", "command": "...", "timeout": 60000 }
+#           ]
+#         }
+#       ]
+#     }
+#   }
 #
-# The merged output has the same shape, with arrays concatenated per event type.
+# Each event contains an array of matcher objects.
+# Each matcher object has a "matcher" regex and a "hooks" array of command objects.
+# The merged output has the same shape, with matcher entries concatenated per event type.
 # Each adapter is responsible for translating event names to its target tool's format.
 
 merge_plugin_hooks() {
@@ -43,10 +56,10 @@ merge_plugin_hooks() {
       continue
     fi
 
-    merged=$(echo "$merged" | jq --argjson new "$plugin_hooks" --arg source "$name" '
+    merged=$(echo "$merged" | jq --argjson new "$plugin_hooks" '
       reduce ($new | to_entries[]) as $entry (
         .;
-        .[$entry.key] = ((.[$entry.key] // []) + [$entry.value[] | . + {_plugin: $source}])
+        .[$entry.key] = ((.[$entry.key] // []) + $entry.value)
       )
     ')
   done <<< "$resolved_names"
@@ -74,18 +87,24 @@ translate_hooks_to_cursor() {
       {};
       if ($event_map[$entry.key] != null) then
         .[$event_map[$entry.key]] = (
-          (.[$event_map[$entry.key]] // []) +
-          [$entry.value[] | del(._plugin)]
+          (.[$event_map[$entry.key]] // []) + $entry.value
         )
       else . end
     )
   '
 }
 
-# Strip internal metadata (_plugin, _comment) from hooks for clean output
-clean_hooks() {
-  local hooks="$1"
-  echo "$hooks" | jq '
-    map_values([.[] | del(._plugin)])
+# Flatten hooks into a simple list of {event, matcher, command} for text-based adapters (Codex AGENTS.md).
+# Extracts the command strings from the nested structure.
+flatten_hooks_for_text() {
+  local merged_hooks="$1"
+
+  echo "$merged_hooks" | jq -r '
+    to_entries[] |
+    .key as $event |
+    .value[] |
+    .matcher as $matcher |
+    .hooks[] |
+    "\($event)|\($matcher)|\(.command)"
   '
 }

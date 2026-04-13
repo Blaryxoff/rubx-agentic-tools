@@ -49,7 +49,7 @@ toolkits/agentic-devkit/bin/devkit-resolve --adapter=codex
 |----------|---------|
 | `merge_plugin_hooks` | Merged JSON of all hooks from resolved plugins (Claude Code format) |
 | `translate_hooks_to_cursor` | Hooks translated from Claude Code event names to Cursor event names |
-| `clean_hooks` | Hooks with internal metadata (`_plugin`) stripped |
+| `flatten_hooks_for_text` | Pipe-delimited lines (`event|matcher|command`) for text-based adapters |
 
 ### DRY hook adapter pattern
 
