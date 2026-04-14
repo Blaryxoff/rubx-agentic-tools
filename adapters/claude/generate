@@ -118,8 +118,8 @@ echo "$resolved_names" | while read -r name; do echo "  - $name"; done
 echo ""
 echo "Done. Run these commands inside Claude Code:"
 echo ""
-echo "  /plugin marketplace remove rubx"
 echo "  /plugin marketplace add ./"
+echo "  # For each install prompt, choose: Install for you, in this repo only (local scope)"
 plugin_names=$(echo "$plugins_json" | jq -r '.[].name')
 if [ -n "$plugin_names" ]; then
   echo "$plugin_names" | while read -r pname; do

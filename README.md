@@ -1,126 +1,144 @@
 # agentic-devkit
 
-A model-agnostic toolkit of AI-agent plugins for product teams. Include as a git submodule to give Claude Code, Cursor, and Codex precisely scoped skills, rules, and coding standards for your project stack.
+A model-agnostic toolkit of AI-agent plugins for product teams. Add it as a submodule to generate scoped AI context (skills, conduct, hooks, permissions) for Claude Code, Cursor, and Codex.
 
 ## Quick Start
 
 ```bash
-# Add as submodule
+# 1) Add toolkit as submodule
 git submodule add https://github.com/Blaryxoff/agentic-devkit.git toolkits/agentic-devkit
 
-# Create project config
-mkdir -p .devkit
-cat > .devkit/toolkit.json << 'EOF'
-{
-  "version": 1,
-  "enabled": ["devkit-laravel", "devkit-vue", "devkit-inertia", "devkit-tailwind"]
-}
-EOF
+# 2) Initialize .devkit/toolkit.json interactively (preset or custom)
+toolkits/agentic-devkit/bin/devkit-resolve --init
 
-# Generate config for your AI tool
+# 3) Generate config for your AI tool(s)
 toolkits/agentic-devkit/bin/devkit-resolve --adapter=claude
 toolkits/agentic-devkit/bin/devkit-resolve --adapter=cursor
 toolkits/agentic-devkit/bin/devkit-resolve --adapter=codex
 ```
 
+## CLI Usage
+
+```bash
+toolkits/agentic-devkit/bin/devkit-resolve                # list resolved plugin names
+toolkits/agentic-devkit/bin/devkit-resolve --init         # create .devkit/toolkit.json interactively
+toolkits/agentic-devkit/bin/devkit-resolve --validate     # validate + show resolved set
+toolkits/agentic-devkit/bin/devkit-resolve --dirs         # list resolved plugin directories
+toolkits/agentic-devkit/bin/devkit-resolve --adapter=...  # generate tool-specific config
+```
+
+Supported adapters: `claude`, `cursor`, `codex`.
+
 ## Available Plugins
 
 | Plugin | Layer | Description | Dependencies |
 |--------|-------|-------------|--------------|
-| `devkit-core` | core | Shared engineering standards: git, spec/test workflow, review conventions | *(always enabled)* |
-| `devkit-frontend` | stack | Tool-agnostic frontend architecture and generic CSS | core |
-| `devkit-laravel` | framework | Laravel architecture, PHP, security, Inertia integration | core |
-| `devkit-nuxt` | framework | Nuxt 3 SSR, data-fetching, TypeScript, BEM/SCSS | core, frontend, vue |
-| `devkit-vue` | framework | Vue component, composable, and state conventions | core, frontend |
-| `devkit-inertia` | framework | Inertia.js transport and page contract rules | core |
-| `devkit-tailwind` | styling | Tailwind CSS utility and tokenization rules | core |
+| `devkit-core` | core | Cross-stack shared standards: workflow, git, spec/test-case process, review conventions | *(always enabled)* |
+| `devkit-frontend` | stack | Tool-agnostic frontend architecture and generic CSS standards | core |
+| `devkit-laravel` | framework | Laravel conventions: architecture, PHP, security, Inertia integration | core |
+| `devkit-nuxt` | framework | Nuxt 3 conventions: SSR, data-fetching, TypeScript, BEM/SCSS workflows | core, frontend, vue |
+| `devkit-vue` | framework | Vue component, composable, and state organization conventions | core, frontend |
+| `devkit-inertia` | framework | Inertia.js transport, page props contracts, and form/navigation behavior | core |
+| `devkit-tailwind` | styling | Tailwind CSS utility conventions and tokenization rules | core |
+| `devkit-css` | styling | Modern CSS intelligence layer from css.dev | core |
 
 ## Example Stacks
 
 ### Laravel + Vue + Tailwind
+
 ```json
 {"version": 1, "enabled": ["devkit-laravel", "devkit-vue", "devkit-inertia", "devkit-tailwind"]}
 ```
+
 Resolves: `core -> frontend -> vue -> inertia -> laravel -> tailwind`
 
-### Nuxt (standalone)
+### Nuxt
+
 ```json
 {"version": 1, "enabled": ["devkit-nuxt"]}
 ```
+
 Resolves: `core -> frontend -> vue -> nuxt`
 
 ### Laravel API only
+
 ```json
 {"version": 1, "enabled": ["devkit-laravel"]}
 ```
+
 Resolves: `core -> laravel`
 
 ## How It Works
 
-1. **Project config** (`.devkit/toolkit.json`) lists enabled plugins.
-2. **Resolver** (`bin/devkit-resolve`) reads the config, auto-includes `devkit-core` and transitive dependencies, detects cycles, and sorts by layer.
-3. **Adapters** translate the resolved set into tool-specific configs:
+1. Configure enabled plugins in `.devkit/toolkit.json` (or run `toolkits/agentic-devkit/bin/devkit-resolve --init`).
+2. Resolver auto-includes `devkit-core` and transitive dependencies, validates the graph, and sorts by layer.
+3. Adapter generation emits tool-specific files for the resolved set only.
 
-| Adapter | Generates |
-|---------|-----------|
-| `claude` | `.claude-plugin/marketplace.json` + `.claude/settings.json` with `enabledPlugins` |
-| `cursor` | `.cursor/rules/devkit-*.mdc` (conduct) + `.cursor/skills/` (symlinks) |
-| `codex` | `.codex/skills/` (symlinks) + `AGENTS.md` conduct section |
+| Adapter | Generated files |
+|---------|------------------|
+| `claude` | `.claude-plugin/marketplace.json`, `.claude/settings.json` (merged permissions + hooks) |
+| `cursor` | `.cursor/rules/devkit-*.mdc`, `.cursor/skills/devkit-*--*/` (symlinks), `.cursor/hooks/hooks.json` |
+| `codex` | `.codex/skills/devkit-*--*/` (symlinks), managed `devkit-toolkit` section in `AGENTS.md` (conduct + hook instructions) |
 
-Disabled plugins are never generated -- their skills, rules, and conduct do not enter the AI's context.
+Disabled plugins do not enter generated AI context.
+
+## Claude Code Plugin Setup (Local Scope)
+
+After running the Claude adapter:
+
+```bash
+toolkits/agentic-devkit/bin/devkit-resolve --adapter=claude
+/plugin marketplace add ./
+/plugin install <plugin-name>@devkit
+# When prompted, choose: Install for you, in this repo only (local scope)
+/reload-plugins
+```
 
 ## Repository Layout
 
-```
-plugins/              All plugins (convention-based discovery)
-  core/               Shared skills + ownership map
-  frontend/           Generic frontend + CSS
-  laravel/            Laravel skills + conduct
-  nuxt/               Nuxt skills + conduct
-  vue/                Vue skills + conduct
-  inertia/            Inertia skills + conduct
-  tailwind/           Tailwind skills + conduct
+```text
+plugins/              Convention-based plugin discovery (plugins/*/plugin.json)
+  core/
+  frontend/
+  laravel/
+  nuxt/
+  vue/
+  inertia/
+  tailwind/
+  css/
 bin/
-  devkit-resolve        CLI: resolve plugins, validate, run adapters
+  devkit-resolve      CLI: init/resolve/validate/adapter generation
 adapters/
-  _lib/resolve.sh     Shared resolution algorithm (bash + jq)
-  claude/generate     Claude Code adapter
-  cursor/generate     Cursor adapter
-  codex/generate      Codex adapter
-schemas/              JSON schemas for toolkit.json and plugin.json
-examples/             Example .devkit/toolkit.json files
+  _lib/resolve.sh     Shared resolution logic
+  _lib/hooks.sh       Shared hook merge/translation helpers
+  claude/generate
+  cursor/generate
+  codex/generate
+schemas/              JSON schemas for toolkit and plugin manifests
+examples/             Starter .devkit/toolkit.json presets
 howto/                Developer guides (Russian)
-visual-loop/          Reusable visual screenshot-diff bootstrap tool
+visual-loop/          Visual screenshot-diff bootstrap tool
 ```
 
-## Adding a Plugin
+## Extending the Toolkit
 
-1. Create `plugins/<name>/plugin.json`:
-   ```json
-   {
-     "name": "devkit-<name>",
-     "version": "0.1.0",
-     "description": "What this plugin provides",
-     "layer": "framework",
-     "defaultEnabled": false,
-     "dependencies": ["devkit-core"],
-     "paths": { "skills": "./skills", "conduct": "./conduct" }
-   }
-   ```
-2. Add skill files at `plugins/<name>/skills/<skill>/SKILL.md`.
-3. Add conduct docs at `plugins/<name>/conduct/*.md`.
-4. The resolver discovers it automatically -- no registry edits needed.
+### Add a plugin
 
-## Adding a Skill to an Existing Plugin
+1. Create `plugins/<name>/plugin.json`.
+2. Add skills at `plugins/<name>/skills/<skill>/SKILL.md`.
+3. Add conduct docs at `plugins/<name>/conduct/*.md` (if applicable).
+4. Verify in a consuming project with `toolkits/agentic-devkit/bin/devkit-resolve --validate`.
 
-Drop a directory with `SKILL.md` into the plugin's `skills/` folder. The adapters pick it up on next run.
+### Add a skill
 
-## Adding an Adapter
+Add `SKILL.md` under `plugins/<plugin>/skills/<skill-name>/`. Adapters pick it up on next generation.
 
-See [adapters/README.md](adapters/README.md) for the adapter development guide.
+### Add an adapter
+
+See [adapters/README.md](adapters/README.md).
 
 ## Requirements
 
-- `jq` (for JSON processing in the resolver)
-- `python3` (for relative path computation)
-- `bash` 3.2+ (macOS default)
+- `jq`
+- `python3`
+- `bash` 3.2+
