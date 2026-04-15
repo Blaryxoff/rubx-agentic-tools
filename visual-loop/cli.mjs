@@ -32,6 +32,32 @@ Options:
   process.exit(1);
 }
 
+function parseFlagTokens(tokens) {
+  const flags = {};
+  for (let i = 0; i < tokens.length; i += 1) {
+    const match = tokens[i].match(/^--([a-z-]+)(?:=(.+))?$/);
+    if (!match) {
+      continue;
+    }
+
+    if (typeof match[2] !== "undefined") {
+      flags[match[1]] = match[2];
+      continue;
+    }
+
+    const next = tokens[i + 1];
+    if (next && !next.startsWith("--")) {
+      flags[match[1]] = next;
+      i += 1;
+      continue;
+    }
+
+    flags[match[1]] = true;
+  }
+
+  return flags;
+}
+
 function parseArgs(argv) {
   const args = argv.slice(2);
   const command = args[0];
@@ -40,15 +66,15 @@ function parseArgs(argv) {
     usage();
   }
 
-  const flags = {};
-  for (let i = 1; i < args.length; i += 1) {
-    if (args[i] === "--") break;
-    const match = args[i].match(/^--([a-z-]+)(?:=(.+))?$/);
-    if (match) {
-      flags[match[1]] = match[2] ?? args[i + 1];
-      if (!match[2]) i += 1;
-    }
-  }
+  const separatorIndex = args.indexOf("--");
+  const beforeSeparator =
+    separatorIndex >= 0 ? args.slice(1, separatorIndex) : args.slice(1);
+  const afterSeparator = separatorIndex >= 0 ? args.slice(separatorIndex + 1) : [];
+
+  const flags = {
+    ...parseFlagTokens(beforeSeparator),
+    ...parseFlagTokens(afterSeparator),
+  };
 
   return { command, flags };
 }
