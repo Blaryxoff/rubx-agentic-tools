@@ -5,13 +5,8 @@ A model-agnostic toolkit of AI-agent plugins for product teams. Add it as a subm
 ## Quick Start
 
 ```bash
-# 1) Add toolkit as submodule
 git submodule add https://github.com/Blaryxoff/agentic-devkit.git toolkits/agentic-devkit
-
-# 2) Initialize .devkit/toolkit.json interactively (preset or custom)
 toolkits/agentic-devkit/bin/devkit-resolve --init
-
-# 3) Generate config for your AI tool(s)
 toolkits/agentic-devkit/bin/devkit-resolve --adapter=claude
 toolkits/agentic-devkit/bin/devkit-resolve --adapter=cursor
 toolkits/agentic-devkit/bin/devkit-resolve --adapter=codex
@@ -19,12 +14,34 @@ toolkits/agentic-devkit/bin/devkit-resolve --adapter=codex
 
 ## CLI Usage
 
+- List resolved plugin names.
+
 ```bash
-toolkits/agentic-devkit/bin/devkit-resolve                # list resolved plugin names
-toolkits/agentic-devkit/bin/devkit-resolve --init         # create .devkit/toolkit.json interactively
-toolkits/agentic-devkit/bin/devkit-resolve --validate     # validate + show resolved set
-toolkits/agentic-devkit/bin/devkit-resolve --dirs         # list resolved plugin directories
-toolkits/agentic-devkit/bin/devkit-resolve --adapter=...  # generate tool-specific config
+toolkits/agentic-devkit/bin/devkit-resolve
+```
+
+- Create `.devkit/toolkit.json` interactively.
+
+```bash
+toolkits/agentic-devkit/bin/devkit-resolve --init
+```
+
+- Validate config and show resolved set.
+
+```bash
+toolkits/agentic-devkit/bin/devkit-resolve --validate
+```
+
+- List resolved plugin directories.
+
+```bash
+toolkits/agentic-devkit/bin/devkit-resolve --dirs
+```
+
+- Generate tool-specific config.
+
+```bash
+toolkits/agentic-devkit/bin/devkit-resolve --adapter=...
 ```
 
 Supported adapters: `claude`, `cursor`, `codex`.
@@ -84,15 +101,18 @@ Disabled plugins do not enter generated AI context.
 
 ## Claude Code Plugin Setup (Local Scope)
 
-After running the Claude adapter:
+1. In terminal, generate Claude config:
 
 ```bash
 toolkits/agentic-devkit/bin/devkit-resolve --adapter=claude
-/plugin marketplace add ./
-/plugin install <plugin-name>@devkit
-# When prompted, choose: Install for you, in this repo only (local scope)
-/reload-plugins
 ```
+
+2. In Claude Code chat (not terminal), run:
+- `/plugin marketplace add ./`
+- `/plugin install <plugin-name>@devkit`
+- `/reload-plugins`
+
+3. For each install prompt, choose local scope for this repository.
 
 ## Repository Layout
 

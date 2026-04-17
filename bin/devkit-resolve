@@ -179,11 +179,11 @@ _init_toolkit() {
   local relpath
   relpath=$(toolkit_relpath)
   echo ""
-  echo "Next step — generate config for your IDE:"
+  echo "Next step: generate config for your IDE/tool:"
   echo ""
-  echo "  $relpath/bin/devkit-resolve --adapter=claude    # Claude Code"
-  echo "  $relpath/bin/devkit-resolve --adapter=cursor    # Cursor"
-  echo "  $relpath/bin/devkit-resolve --adapter=codex     # Codex"
+  echo "  $relpath/bin/devkit-resolve --adapter=claude"
+  echo "  $relpath/bin/devkit-resolve --adapter=cursor"
+  echo "  $relpath/bin/devkit-resolve --adapter=codex"
 }
 
 case "$MODE" in
