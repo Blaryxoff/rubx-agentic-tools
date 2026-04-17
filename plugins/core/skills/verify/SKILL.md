@@ -8,16 +8,15 @@ description: run the verification loop (lint, typecheck, test, security) after i
 You are acting as a **quality engineer**. Your job is to run the project's verification loop after implementation changes
 and report the results clearly.
 
-## Stack-specific commands
+## Resolving commands
 
-If the project uses the devkit toolkit, read `.devkit/toolkit.json` to identify enabled plugins. For each active plugin,
-read its conduct docs (`plugins/<plugin>/conduct/`) for verification commands specific to that stack.
+Use this priority order to find the commands to run for each step:
 
-Also check the current dev plan's `## Validation Commands` section if one is active — those commands take priority over
-generic defaults.
-
-If neither source provides commands, fall back to detecting the stack from project files (`package.json`, `composer.json`,
-`Cargo.toml`, `go.mod`, etc.) and use conventional commands.
+1. **Active dev plan** — check the current plan's `## Validation Commands` section. These take priority.
+2. **Conduct docs** — read `.devkit/toolkit.json`, identify enabled plugins, and read each plugin's `conduct/` directory
+   for verification commands (lint, typecheck, test).
+3. **Project files** — if neither source provides commands, infer from `package.json` scripts, `Makefile` targets,
+   `composer.json`, or other project manifests.
 
 ## Build assumption
 
@@ -30,31 +29,16 @@ Run these steps in order. Stop and report on first failure unless the user asks 
 
 ### 1. Lint
 
-Run the linter on changed files or the full project:
-
-- Laravel: `./vendor/bin/pint --test` or `./vendor/bin/phpstan analyse`
-- Node: `pnpm run lint`
-- Rust: `cargo clippy`
-- Go: `golangci-lint run`
+Run the linter as resolved above. If no linter is configured for this project, mark as `⏭️ skipped — not configured`.
 
 ### 2. Type check
 
-Run static type analysis when the stack supports it:
-
-- TypeScript: `pnpm run typecheck` or `npx tsc --noEmit`
-- PHP (with PHPStan/Larastan): `./vendor/bin/phpstan analyse`
-- Python (with mypy): `mypy .`
-
-Skip this step for dynamically typed stacks without a configured type checker.
+Run static type analysis as resolved above. If the stack has no type checker configured, mark as
+`⏭️ skipped — not configured`.
 
 ### 3. Test
 
-Run the existing test suite only if the user explicitly asked for verification that includes testing.
-
-- Laravel: `php artisan test`
-- Node: `pnpm run test`
-- Rust: `cargo test`
-- Go: `go test ./...`
+Run the existing test suite **only if the user explicitly asked for verification that includes testing**.
 
 If the user did not ask for tests, skip this step and mark it as `⏭️ skipped — not requested`.
 Do not create new test files or write test code as part of verification.
@@ -63,10 +47,10 @@ Do not create new test files or write test code as part of verification.
 
 Review the changes (not the full codebase) for obvious security issues:
 
-- Secrets or credentials in code or config files.
-- Raw SQL string interpolation.
-- Missing authorization on new endpoints.
-- User input passed to dangerous functions without sanitization.
+- Secrets or credentials in code or config files
+- Raw SQL string interpolation
+- Missing authorization on new endpoints
+- User input passed to dangerous functions without sanitization
 
 This is a quick review, not a full audit. Report findings inline with the other results.
 
@@ -78,7 +62,7 @@ This is a quick review, not a full audit. Report findings inline with the other 
 | Step       | Status | Notes                          |
 |------------|--------|--------------------------------|
 | Lint       | ✅/❌  | <one-line summary or "passed"> |
-| Type check | ✅/⏭️  | <one-line summary or "skipped — no type checker configured"> |
+| Type check | ✅/⏭️  | <one-line summary or "skipped — not configured"> |
 | Test       | ✅/⏭️  | <one-line summary or "skipped — not requested"> |
 | Security   | ✅/⚠️  | <one-line summary or "no issues found"> |
 ```
