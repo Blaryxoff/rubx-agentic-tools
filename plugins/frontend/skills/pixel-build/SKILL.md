@@ -10,6 +10,18 @@ Your job is to translate a Figma design into production-ready code, then verify 
 
 The Figma design is the source of truth. Your goal is to make the rendered UI match it across all configured viewports.
 
+## Stack context
+
+Before starting, detect the active stack and load the applicable conduct rules.
+
+**Primary — `.devkit/toolkit.json`:**
+Read the `enabled` list. For each active plugin that has a `conduct/` directory, read all docs in it. Focus on architecture, patterns, conventions, and anti-patterns docs; skip ops/infra docs (git workflow, logging, deployment commands). `plugins/frontend/conduct/` is always read.
+
+**Fallback — `package.json`:**
+If `.devkit/toolkit.json` is absent, read `package.json` (dependencies + devDependencies). Identify the core technologies in use, then read the conduct docs from the matching `plugins/<technology>/conduct/` directory.
+
+Apply all loaded conduct rules throughout the implementation.
+
 ## Prerequisites
 
 - Visual-loop CLI is bootstrapped (`visual/config.json` exists in the project root).
@@ -25,6 +37,7 @@ Copy this checklist and track progress:
 
 ```
 Pixel Build Progress:
+- [ ] Step 0: Load stack context — detect active plugins and read their conduct
 - [ ] Step 1: Read Figma — extract design specs
 - [ ] Step 2: Audit existing code — find reusable components/tokens
 - [ ] Step 3: Implement — write or update code

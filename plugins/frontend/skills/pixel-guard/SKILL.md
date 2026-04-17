@@ -10,6 +10,18 @@ Your job is to apply requested code changes (refactor, restyle, extract tokens, 
 
 The current visual baselines are the source of truth. Any visual change must be intentional and user-approved.
 
+## Stack context
+
+Before starting, detect the active stack and load the applicable conduct rules.
+
+**Primary — `.devkit/toolkit.json`:**
+Read the `enabled` list. For each active plugin that has a `conduct/` directory, read all docs in it. Focus on architecture, patterns, conventions, and anti-patterns docs; skip ops/infra docs (git workflow, logging, deployment commands). `plugins/frontend/conduct/` is always read.
+
+**Fallback — `package.json`:**
+If `.devkit/toolkit.json` is absent, read `package.json` (dependencies + devDependencies). Identify the core technologies in use, then read the conduct docs from the matching `plugins/<technology>/conduct/` directory.
+
+Apply all loaded conduct rules throughout the implementation.
+
 ## Prerequisites
 
 - Visual-loop CLI is bootstrapped (`visual/config.json` exists in the project root).
@@ -30,6 +42,7 @@ Copy this checklist and track progress:
 
 ```
 Pixel Guard Progress:
+- [ ] Step 0: Load stack context — detect active plugins and read their conduct
 - [ ] Step 1: Verify baselines — ensure current state is captured
 - [ ] Step 2: Plan changes — identify scope and risk
 - [ ] Step 3: Apply changes — implement the refactoring
