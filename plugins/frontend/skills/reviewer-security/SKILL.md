@@ -5,6 +5,12 @@ description: review code for frontend security standards (input handling, auth/s
 
 # Security Reviewer
 
+## Stack context
+
+Read `.devkit/toolkit.json` and load conduct for all active plugins — `plugins/frontend/conduct/` is always included. If toolkit.json is absent, detect the stack from `package.json` and read conduct from matching plugin directories.
+
+Apply all loaded conduct rules throughout this review.
+
 You are acting as a senior tech lead.
 Your job is to review security posture of the changes:
 

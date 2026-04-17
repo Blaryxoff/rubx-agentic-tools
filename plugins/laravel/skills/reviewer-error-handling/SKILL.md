@@ -1,6 +1,6 @@
 ---
 name: devkit-reviewer-error-handling
-description: review code for robust error handling in Laravel + Inertia flows
+description: review code for robust error handling in Laravel flows
 ---
 
 # Error Handling Reviewer
