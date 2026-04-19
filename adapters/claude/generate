@@ -63,7 +63,26 @@ marketplace=$(jq -n \
   --argjson plugins "$plugins_json" \
   '{name: "devkit", owner: {name: "devkit"}, plugins: $plugins}')
 
-echo "$marketplace" | jq '.' > "$marketplace_dir/marketplace.json"
+marketplace_file="$marketplace_dir/marketplace.json"
+state_file="$marketplace_dir/.devkit-state.json"
+
+prev_state="{}"
+if [ -f "$state_file" ]; then
+  prev_state=$(jq '.plugins // {}' "$state_file" 2>/dev/null || echo "{}")
+fi
+
+new_state="{}"
+while IFS= read -r name; do
+  [ -z "$name" ] && continue
+  pdata=$(echo "$plugin_index" | jq --arg name "$name" '.[$name]')
+  has_skills=$(echo "$pdata" | jq 'has("paths") and (.paths | has("skills"))')
+  [ "$has_skills" = "true" ] || continue
+  pver=$(echo "$pdata" | jq -r '.version')
+  new_state=$(echo "$new_state" | jq --arg n "$name" --arg v "$pver" '.[$n] = $v')
+done <<< "$resolved_names"
+
+echo "$marketplace" | jq '.' > "$marketplace_file"
+jq -n --argjson plugins "$new_state" '{plugins: $plugins}' > "$state_file"
 echo "    Created: .claude-plugin/marketplace.json"
 
 # --- settings.json (merge permissions.deny) ---
@@ -116,14 +135,50 @@ echo ""
 echo "Resolved plugins:"
 echo "$resolved_names" | while read -r name; do echo "  - $name"; done
 echo ""
-echo "Done. Run these commands inside Claude Code:"
-echo ""
-echo "  /plugin marketplace add ./"
-echo "  # For each install prompt, choose: Install for you, in this repo only (local scope)"
-plugin_names=$(echo "$plugins_json" | jq -r '.[].name')
-if [ -n "$plugin_names" ]; then
-  echo "$plugin_names" | while read -r pname; do
+
+# Determine which plugins are new (need install) vs updated (need reinstall) vs unchanged
+new_plugins=$(jq -n --argjson prev "$prev_state" --argjson new "$new_state" \
+  '[$new | to_entries[] | select($prev[.key] == null) | .key]')
+updated_plugins=$(jq -n --argjson prev "$prev_state" --argjson new "$new_state" \
+  '[$new | to_entries[] | select($prev[.key] != null and $prev[.key] != .value) | .key]')
+removed_plugins=$(jq -n --argjson prev "$prev_state" --argjson new "$new_state" \
+  '[$prev | to_entries[] | select($new[.key] == null) | .key]')
+
+new_count=$(echo "$new_plugins" | jq 'length')
+updated_count=$(echo "$updated_plugins" | jq 'length')
+removed_count=$(echo "$removed_plugins" | jq 'length')
+
+if [ "$(echo "$prev_state" | jq 'length')" = "0" ]; then
+  echo "Done. Run these commands inside Claude Code:"
+  echo ""
+  echo "  /plugin marketplace add ./"
+  echo ""
+  echo "  For each install prompt, choose: Install for you, in this repo only (local scope)"
+  echo ""
+  echo "$new_state" | jq -r 'keys[]' | while read -r pname; do
     echo "  /plugin install ${pname}@devkit"
   done
+  echo "  /reload-plugins"
+elif [ "$new_count" = "0" ] && [ "$updated_count" = "0" ] && [ "$removed_count" = "0" ]; then
+  echo "Done. No plugin changes detected — nothing to install or update in Claude Code."
+else
+  echo "Done. Run these commands inside Claude Code:"
+  echo ""
+  echo "  /plugin marketplace update devkit"
+  if [ "$new_count" != "0" ]; then
+    echo "$new_plugins" | jq -r '.[]' | while read -r pname; do
+      echo "  /plugin install ${pname}@devkit"
+    done
+  fi
+  if [ "$updated_count" != "0" ]; then
+    echo "$updated_plugins" | jq -r '.[]' | while read -r pname; do
+      echo "  /plugin update ${pname}@devkit"
+    done
+  fi
+  if [ "$removed_count" != "0" ]; then
+    echo "$removed_plugins" | jq -r '.[]' | while read -r pname; do
+      echo "  /plugin uninstall ${pname}@devkit"
+    done
+  fi
+  echo "  /reload-plugins"
 fi
-echo "  /reload-plugins"
