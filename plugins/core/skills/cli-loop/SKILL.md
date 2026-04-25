@@ -49,13 +49,9 @@ Parse pasted output, detect non-zero exit and error patterns, update the [State 
 
 ### State block
 
-At the start of every reply after grounding, refresh a compact block, for example:
+Keep state updates minimal: default to a one-line `Step` delta. Include only changed fields from the [State block](#state-block) when needed.
 
-- Task one-liner; acceptance check.
-- **Env fingerprint** — OS, shell, key tool **versions** (as observed).
-- Hosts, env names, **secret variable names and temp file paths** (not secret **values**); generated IDs, cluster IDs, **names** of stores for generated passwords.
-- **Pending cleanups** (`unset` / `rm` / `trap` targets).
-- **Step**: last completed, next to run.
+Emit the **full** [State block](#state-block) only before `/compact`/major trim, after a long resume, when trust boundary or secret metadata changes, or when the user asks for a full recap.
 
 Before any `/compact` or major trim, **restate the State block in full** so the contract in `plugins/core/conduct/context-management.md` (CLI loop session state) is preserved. See that section for the checklist.
 
