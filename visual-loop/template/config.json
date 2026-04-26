@@ -23,17 +23,9 @@
     }
   },
   "auth": {
-    "loginUrl": "/login",
-    "fields": {
-      "email": "[name=email]",
-      "password": "[name=password]"
-    },
-    "submit": "button[type=submit]",
-    "waitAfterLogin": null,
-    "credentials": {
-      "email": "",
-      "password": ""
-    }
+    "tokenStorageKey": "access_token",
+    "tokenCookie": null,
+    "credentials": {}
   },
   "server": {
     "readyUrl": "http://127.0.0.1:5173",

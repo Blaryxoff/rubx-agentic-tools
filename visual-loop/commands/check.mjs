@@ -37,8 +37,13 @@ export async function runVisualCheck({ page, viewport = null, projectRoot, confi
 
   const auth = resolveAuth(config.auth, pageMeta.auth);
   let storageStatePath = null;
+  let extraHTTPHeaders = {};
   if (auth) {
-    storageStatePath = await ensureStorageState(auth, config.baseUrl, authStatePath(paths.visualDir));
+    ({ statePath: storageStatePath, extraHTTPHeaders } = await ensureStorageState(
+      auth,
+      config.baseUrl,
+      authStatePath(paths.visualDir),
+    ));
   }
 
   const serverProcess = await ensureServer(config, { cwd: projectRoot });
@@ -63,6 +68,7 @@ export async function runVisualCheck({ page, viewport = null, projectRoot, confi
         locale: pageMeta.locale ?? "en",
         timezone: pageMeta.timezone ?? "UTC",
         storageStatePath,
+        extraHTTPHeaders,
       });
 
       const hasBaseline = await fileExists(currentBaselinePath);

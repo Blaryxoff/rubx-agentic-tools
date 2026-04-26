@@ -24,6 +24,7 @@ export async function captureViewport({
   timezone = "UTC",
   timeoutMs = 30000,
   storageStatePath = null,
+  extraHTTPHeaders = {},
 }) {
   const browser = await chromium.launch({ headless: true });
   const contextOptions = {
@@ -37,6 +38,9 @@ export async function captureViewport({
   };
   if (storageStatePath) {
     contextOptions.storageState = storageStatePath;
+  }
+  if (Object.keys(extraHTTPHeaders).length > 0) {
+    contextOptions.extraHTTPHeaders = extraHTTPHeaders;
   }
   const context = await browser.newContext(contextOptions);
   const page = await context.newPage();
